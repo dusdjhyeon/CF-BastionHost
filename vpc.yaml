@@ -1,0 +1,13 @@
+Parameters:
+  VPCCIDR:
+    Type: String
+
+Resources:
+  DhVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+
+Outputs:
+  VPCId:
+    Value: !Ref DhVPC

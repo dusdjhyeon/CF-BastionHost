@@ -1,0 +1,23 @@
+Parameters:
+  VpcId:
+    Type: String
+  PublicSubnet1CIDR:
+    Type: String
+  PublicSubnet2CIDR:
+    Type: String
+  PrivateSubnet1CIDR:
+    Type: String
+  PrivateSubnet2CIDR:
+    Type: String
+
+Resources:
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      VpcId: !Ref VpcId
+      CidrBlock: !Ref PublicSubnet1CIDR
+
+Outputs:
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
