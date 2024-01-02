@@ -19,24 +19,36 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       VpcId: !Ref VpcId
       CidrBlock: !Ref PublicSubnet1CIDR
+      Tags:
+        - Key: Name
+          Value: PulicSubnet1
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: ap-northeast-1c
       VpcId: !Ref VpcId
       CidrBlock: !Ref PublicSubnet2CIDR
+      Tags:
+        - Key: Name
+          Value: PulicSubnet2
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: ap-northeast-1a
       VpcId: !Ref VpcId
       CidrBlock: !Ref PrivateSubnet1CIDR
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet1
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: ap-northeast-1c
       VpcId: !Ref VpcId
       CidrBlock: !Ref PrivateSubnet2CIDR
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet2
 
 Outputs:
   PublicSubnet1:

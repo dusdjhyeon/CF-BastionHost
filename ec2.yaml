@@ -32,6 +32,9 @@ Resources:
           SubnetId: !Ref SubnetId
           GroupSet:
             - !Ref SecurityGroup
+      Tags:
+        - Key: Name
+          Value: !If [PublicEC2, 'BastionInstance', 'PrivateInstance']
   EC2EIP:
     Condition: PublicEC2
     Type: AWS::EC2::EIP

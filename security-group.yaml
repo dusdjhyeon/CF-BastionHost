@@ -3,6 +3,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   VpcId:
     Type: String
+  MyFWIP:
+    Type: String
+  MyIP:
+    Type: String
 
 
 Resources:
@@ -14,6 +18,9 @@ Resources:
       SecurityGroupIngress:
         - SourceSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
           IpProtocol: -1
+      Tags:
+        - Key: Name
+          Value: Private-EC2
 
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -21,10 +28,17 @@ Resources:
       GroupDescription: Security Group for Bastion Host
       VpcId: !Ref VpcId
       SecurityGroupIngress:
-        - CidrIp: 0.0.0.0/0
+        - CidrIp: !Ref MyIP
           IpProtocol: tcp
           FromPort: 22
           ToPort: 22
+        - CidrIp: !Ref MyFWIP
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      Tags:
+        - Key: Name
+          Value: Bastion-EC2
 
 Outputs:
   BastionSG:

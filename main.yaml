@@ -45,6 +45,14 @@ Parameters:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     Default: 10.0.192.0/18
 
+  MyFWIP:
+    Type: String
+    Default: 211.226.18.70/32
+  
+  MyIP:
+    Type: String
+    Default: 211.226.18.71/32
+
 Resources:
   VpcConf:
     Type: AWS::CloudFormation::Stack
@@ -90,6 +98,8 @@ Resources:
       TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/security-group.yaml
       Parameters:
         VpcId: !GetAtt VpcConf.Outputs.VPCId
+        MyFWIP: !Ref MyFWIP
+        MyIP: !Ref MyIP
 
   BastionEC2Conf:
     Type: AWS::CloudFormation::Stack
