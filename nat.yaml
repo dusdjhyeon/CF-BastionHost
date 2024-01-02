@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  VpcId:
+    Type: String
+  NatSubnet:
+    Type: String
+
+Resources:
+  EIP:
+    Type: AWS::EC2::EIP    
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId   
+      SubnetId: !Ref NatSubnet
+
+Outputs:
+  NatGatewayId:
+    Value: !Ref NatGateway

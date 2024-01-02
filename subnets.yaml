@@ -1,3 +1,5 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
 Parameters:
   VpcId:
     Type: String
@@ -17,7 +19,31 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       VpcId: !Ref VpcId
       CidrBlock: !Ref PublicSubnet1CIDR
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1c
+      VpcId: !Ref VpcId
+      CidrBlock: !Ref PublicSubnet2CIDR
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      VpcId: !Ref VpcId
+      CidrBlock: !Ref PrivateSubnet1CIDR
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1c
+      VpcId: !Ref VpcId
+      CidrBlock: !Ref PrivateSubnet2CIDR
 
 Outputs:
   PublicSubnet1:
     Value: !Ref PublicSubnet1
+  PublicSubnet2:
+    Value: !Ref PublicSubnet2
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2

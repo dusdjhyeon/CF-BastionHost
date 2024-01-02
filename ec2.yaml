@@ -1,3 +1,5 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
 Parameters:
   InstanceType:
     Type: String
@@ -5,57 +7,34 @@ Parameters:
     Type: String
   KeyPair:
     Type: String
-  PrivateSubnet1:
+  SubnetId:
     Type: String
-  PublicSubnet2:
+  SecurityGroup:
     Type: String
+  AssignPublicIp:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Description: Create a public instance and assign eip if this parameter is set to 'true'
+  
+Conditions:
+  PublicEC2: !Equals [ !Ref AssignPublicIp, 'true']
 
 Resources:
-  EC2Instance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: !Ref InstanceType
-      SubnetId: !Ref PrivateSubnet1
-      ImageId: !Ref AMI
-      KeyName: !Ref KeyPair
-      SecurityGroupIds:
-        - !GetAtt EC2SecurityGroup.GroupId
-
-  BastionHost:
+  EC2:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: !Ref AMI
       KeyName: !Ref KeyPair
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
+        - AssociatePublicIpAddress: !Ref AssignPublicIp
           DeviceIndex: 0
-          SubnetId: !Ref PublicSubnet2
+          SubnetId: !Ref SubnetId
           GroupSet:
-            - !GetAtt BastionSecurityGroup.GroupId
-
-  BastionEIP:
+            - !Ref SecurityGroup
+  EC2EIP:
+    Condition: PublicEC2
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
-      InstanceId: !Ref BastionHost
-
-  EC2SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security Group for EC2 instance
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - SourceSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
-          IpProtocol: -1
-
-  BastionSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security Group for Bastion Host
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - CidrIp: 0.0.0.0/0
-          IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+      InstanceId: !Ref EC2

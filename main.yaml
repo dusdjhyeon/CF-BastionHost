@@ -1,26 +1,116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  AMI:
+    Description: Static reference to latest RedHat AMI
+    Type: String
+    Default: ami-07c589821f2b353aa
+
+  KeyPair:
+    Description: Which Key Pair would you like to use for remote access
+    Type: 'AWS::EC2::KeyPair::KeyName'
+
+  InstanceType:
+    Description: Instance size for EC2 instance
+    Type: String
+    Default: t2.micro
+
+  VPCCIDR:
+    Type: String
+    Description: CIDR block for the VPC.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Default: 10.0.0.0/16
+
+  PublicSubnet1CIDR:
+    Type: String
+    Description: CIDR block for private subnet 1, located in Availability Zone 1.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Default: 10.0.0.0/18
+
+  PublicSubnet2CIDR:
+    Type: String
+    Description: CIDR block for private subnet 1, located in Availability Zone 1.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Default: 10.0.64.0/18
+
+  PrivateSubnet1CIDR:
+    Type: String
+    Description: CIDR block for private subnet 1, located in Availability Zone 1.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Default: 10.0.128.0/18
+
+  PrivateSubnet2CIDR:
+    Type: String
+    Description: CIDR block for private subnet 1, located in Availability Zone 1.
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Default: 10.0.192.0/18
+
 Resources:
-  DhVPC:
+  VpcConf:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: vpc.yaml
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/vpc.yaml
       Parameters:
         VPCCIDR: !Ref VPCCIDR
 
-  SubnetConfiguration:
+  SubnetConf:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: subnets.yaml
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/subnets.yaml
       Parameters:
-        VpcId: !GetAtt DhVPC.Outputs.VPCId
+        VpcId: !GetAtt VpcConf.Outputs.VPCId
         PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
         PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
         PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
         PrivateSubnet2CIDR: !Ref PrivateSubnet2CIDR
 
-  InternetConfiguration:
+  NetworkConf:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: internet.yaml
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/nat.yaml
       Parameters:
-        VpcId: !GetAtt DhVPC.Outputs.VPCId
-        PublicSubnet1: !GetAtt SubnetConfiguration.Outputs.PublicSubnet1
+        VpcId: !GetAtt VpcConf.Outputs.VPCId
+        NatSubnet: !GetAtt SubnetConf.Outputs.PublicSubnet1
+
+  RoutingConf:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/route.yaml
+      Parameters:
+        VpcId: !GetAtt VpcConf.Outputs.VPCId
+        NatGatewayId: !GetAtt NetworkConf.Outputs.NatGatewayId
+        InternetGatewayId: !GetAtt VpcConf.Outputs.IGWId
+        PublicSubnet1: !GetAtt SubnetConf.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt SubnetConf.Outputs.PublicSubnet2
+        PrivateSubnet1: !GetAtt SubnetConf.Outputs.PrivateSubnet1
+
+  SecurityGroupConf:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/security-group.yaml
+      Parameters:
+        VpcId: !GetAtt VpcConf.Outputs.VPCId
+
+  BastionEC2Conf:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/ec2.yaml
+      Parameters:
+        InstanceType: !Ref InstanceType
+        AMI: !Ref AMI
+        KeyPair: !Ref KeyPair
+        SubnetId: !GetAtt SubnetConf.Outputs.PublicSubnet2
+        SecurityGroup: !GetAtt SecurityGroupConf.Outputs.BastionSG
+        AssignPublicIp: 'true'
+  
+  PrivateEC2Conf:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://dh-cf-bastion.s3.ap-northeast-1.amazonaws.com/ec2.yaml
+      Parameters:
+        InstanceType: !Ref InstanceType
+        AMI: !Ref AMI
+        KeyPair: !Ref KeyPair
+        SubnetId: !GetAtt SubnetConf.Outputs.PrivateSubnet1
+        SecurityGroup: !GetAtt SecurityGroupConf.Outputs.PrivateEC2SG
+        AssignPublicIp: 'false'
